@@ -29,9 +29,11 @@ export class WorkflowRunner {
 
     try {
       for (const step of execution.workflow.steps) {
+        const stepStart = Date.now();
         await this.writeLog(executionId, step.id, 'info', `Starting step [${step.order}] type="${step.type}"`);
         await this.executeStep(executionId, step);
-        await this.writeLog(executionId, step.id, 'info', `Completed step [${step.order}] type="${step.type}"`);
+        const stepMs = Date.now() - stepStart;
+        await this.writeLog(executionId, step.id, 'info', `Completed step [${step.order}] type="${step.type}" in ${stepMs}ms`, { durationMs: stepMs });
       }
 
       const finishedAt = new Date();

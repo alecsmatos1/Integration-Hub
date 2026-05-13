@@ -36,9 +36,13 @@ export class WebhooksService {
     });
   }
 
-  listEvents(userId: string) {
+  listEvents(userId: string, filters?: { provider?: string; eventType?: string }) {
     return this.prisma.webhookEvent.findMany({
-      where: { endpoint: { userId } },
+      where: {
+        endpoint: { userId },
+        ...(filters?.provider ? { provider: filters.provider } : {}),
+        ...(filters?.eventType ? { eventType: filters.eventType } : {}),
+      },
       orderBy: { receivedAt: 'desc' },
       take: 100,
     });

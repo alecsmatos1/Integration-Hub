@@ -5,9 +5,12 @@ import { PrismaService } from '../common/prisma.service.js';
 export class ExecutionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  list(userId: string) {
+  list(userId: string, filters?: { status?: string }) {
     return this.prisma.workflowExecution.findMany({
-      where: { workflow: { userId } },
+      where: {
+        workflow: { userId },
+        ...(filters?.status ? { status: filters.status } : {}),
+      },
       include: { workflow: { select: { name: true } } },
       orderBy: { createdAt: 'desc' },
       take: 100,

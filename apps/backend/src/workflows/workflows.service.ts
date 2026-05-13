@@ -50,7 +50,16 @@ export class WorkflowsService {
     });
     if (!workflow) throw new NotFoundException('Workflow not found');
 
-    return this.createAndEnqueue(workflowId, null);
+    return this.createAndEnqueue(workflowId, null, 0);
+  }
+
+  async retryExecution(executionId: string, userId: string) {
+    const execution = await this.prisma.workflowExecution.findFirst({
+      where: { id: executionId, status: 'failed', workflow: { userId } },
+    });
+    if (!execution) throw new NotFoundException('Failed execution not found');
+
+    return this.createAndEnqueue(execution.workflowId, execution.webhookEventId, execution.retryCount + 1);
   }
 
   async triggerForEvent(
@@ -68,9 +77,9 @@ export class WorkflowsService {
     }
   }
 
-  private async createAndEnqueue(workflowId: string, webhookEventId: string | null) {
+  private async createAndEnqueue(workflowId: string, webhookEventId: string | null, retryCount = 0) {
     const execution = await this.prisma.workflowExecution.create({
-      data: { workflowId, webhookEventId, status: 'pending' },
+      data: { workflowId, webhookEventId, status: 'pending', retryCount },
     });
     await this.queue.enqueueWorkflowExecution(execution.id);
     return execution;

@@ -239,6 +239,22 @@ describe('Integration Hub (e2e)', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
+  it('GET /webhooks/events?provider=github -> 200', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/webhooks/events?provider=github')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  it('GET /webhooks/events?provider=invalid -> 400', async () => {
+    await request(app.getHttpServer())
+      .get('/webhooks/events?provider=invalid')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(400);
+  });
+
   // -- Workflows -----------------------------------------------------------------
 
   it('POST /workflows -> 201 creates workflow', async () => {
@@ -338,6 +354,22 @@ describe('Integration Hub (e2e)', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
+  it('GET /executions?status=success -> 200', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/executions?status=success')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  it('GET /executions?status=invalid -> 400', async () => {
+    await request(app.getHttpServer())
+      .get('/executions?status=invalid')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(400);
+  });
+
   it('GET /executions/:id/logs -> 200 after runner finishes', async () => {
     await new Promise((r) => setTimeout(r, 300));
 
@@ -348,5 +380,160 @@ describe('Integration Hub (e2e)', () => {
 
     expect(Array.isArray(res.body)).toBe(true);
     expect((res.body as unknown[]).length).toBeGreaterThan(0);
+  });
+
+  it('GET /executions/:id/logs includes step timing metadata', async () => {
+    const res = await request(app.getHttpServer())
+      .get(`/executions/${executionId}/logs`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    type Log = { message: string; metadata?: { durationMs?: number } };
+    const logs = res.body as Log[];
+    const completionLog = logs.find((l) => l.message.includes('Completed step') && l.metadata?.durationMs !== undefined);
+    expect(completionLog).toBeDefined();
+  });
+
+  it('POST /executions/:id/retry -> 404 for non-failed execution', async () => {
+    await request(app.getHttpServer())
+      .post(`/executions/${executionId}/retry`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(404);
+  });
+
+  it('POST /executions/nonexistent/retry -> 404', async () => {
+    await request(app.getHttpServer())
+      .post('/executions/00000000-0000-0000-0000-000000000000/retry')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(404);
+  });
+
+  // -- Multi-User Isolation -----------------------------------------------------
+
+  describe('multi-user isolation', () => {
+    let tokenB: string;
+    let workflowIdB: string;
+
+    const userB = {
+      email: `e2e-b-${Date.now()}@example.com`,
+      password: 'Test1234!',
+      name: 'E2E User B',
+    };
+
+    it('registers user B', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send(userB)
+        .expect(201);
+      tokenB = res.body.accessToken;
+    });
+
+    it('user B sees no connections (not user A data)', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/integrations/connections')
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect((res.body as unknown[]).length).toBe(0);
+    });
+
+    it('user B sees no webhook endpoints (not user A data)', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/webhooks/endpoints')
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(200);
+      expect((res.body as unknown[]).length).toBe(0);
+    });
+
+    it('user B sees no webhook events (not user A data)', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/webhooks/events')
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(200);
+      expect((res.body as unknown[]).length).toBe(0);
+    });
+
+    it('user B sees no executions (not user A data)', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/executions')
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(200);
+      expect((res.body as unknown[]).length).toBe(0);
+    });
+
+    it('user B cannot manually execute user A workflow -> 404', async () => {
+      await request(app.getHttpServer())
+        .post(`/workflows/${workflowId}/execute`)
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(404);
+    });
+
+    it('user B cannot read user A execution logs -> 404', async () => {
+      await request(app.getHttpServer())
+        .get(`/executions/${executionId}/logs`)
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(404);
+    });
+
+    it('webhook to user A endpoint does not trigger user B workflow', async () => {
+      // user B: connection, endpoint, workflow with same github/push trigger
+      const connBRes = await request(app.getHttpServer())
+        .post('/integrations/connections')
+        .set('Authorization', `Bearer ${tokenB}`)
+        .send({ provider: 'github', name: 'B GitHub' })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .post('/webhooks/endpoints')
+        .set('Authorization', `Bearer ${tokenB}`)
+        .send({ name: 'B Hook', connectionId: connBRes.body.id })
+        .expect(201);
+
+      const wfRes = await request(app.getHttpServer())
+        .post('/workflows')
+        .set('Authorization', `Bearer ${tokenB}`)
+        .send({
+          name: 'B Workflow',
+          triggerProvider: 'github',
+          triggerEvent: 'push',
+          steps: [{ order: 1, type: 'log', config: { message: 'B step' } }],
+        })
+        .expect(201);
+      workflowIdB = wfRes.body.id;
+
+      // user A: create an unsigned connection + endpoint for this test
+      const connARes = await request(app.getHttpServer())
+        .post('/integrations/connections')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ provider: 'github', name: 'A Unsigned' })
+        .expect(201);
+
+      const epARes = await request(app.getHttpServer())
+        .post('/webhooks/endpoints')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ name: 'A Hook Unsigned', connectionId: connARes.body.id })
+        .expect(201);
+
+      // send webhook to user A's unsigned endpoint
+      await request(app.getHttpServer())
+        .post(`/webhooks/github/${epARes.body.pathToken}`)
+        .set('Content-Type', 'application/json')
+        .set('X-GitHub-Event', 'push')
+        .set('X-GitHub-Delivery', 'isolation-test')
+        .send(JSON.stringify({ ref: 'refs/heads/main' }))
+        .expect(201);
+
+      await new Promise((r) => setTimeout(r, 300));
+
+      // user B must still have zero executions
+      const res = await request(app.getHttpServer())
+        .get('/executions')
+        .set('Authorization', `Bearer ${tokenB}`)
+        .expect(200);
+
+      const executions = res.body as Array<{ workflowId: string }>;
+      const bTriggered = executions.some((e) => e.workflowId === workflowIdB);
+      expect(bTriggered).toBe(false);
+    });
   });
 });

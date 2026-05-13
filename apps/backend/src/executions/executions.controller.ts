@@ -1,7 +1,9 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { WorkflowsService } from '../workflows/workflows.service.js';
+import { ListExecutionsDto } from './dto/list-executions.dto.js';
 import { ExecutionsService } from './executions.service.js';
 
 @ApiTags('executions')
@@ -9,12 +11,15 @@ import { ExecutionsService } from './executions.service.js';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ExecutionsController {
-  constructor(private readonly service: ExecutionsService) {}
+  constructor(
+    private readonly service: ExecutionsService,
+    private readonly workflows: WorkflowsService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List workflow executions' })
-  list(@CurrentUser() user: { id: string }) {
-    return this.service.list(user.id);
+  list(@CurrentUser() user: { id: string }, @Query() query: ListExecutionsDto) {
+    return this.service.list(user.id, query);
   }
 
   @Get(':id')
@@ -27,5 +32,12 @@ export class ExecutionsController {
   @ApiOperation({ summary: 'Get execution logs in order' })
   findLogs(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.service.findLogs(id, user.id);
+  }
+
+  @Post(':id/retry')
+  @HttpCode(201)
+  @ApiOperation({ summary: 'Retry a failed execution' })
+  retry(@Param('id') id: string, @CurrentUser() user: { id: string }) {
+    return this.workflows.retryExecution(id, user.id);
   }
 }
