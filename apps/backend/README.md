@@ -1,4 +1,4 @@
-# Integration Hub — Backend
+# Integration Hub - Backend
 
 NestJS 11 REST API for the Integration Hub webhook automation platform.
 
@@ -93,4 +93,4 @@ After creating an endpoint, use the returned `pathToken`:
 POST http://localhost:3000/webhooks/github/<pathToken>
 ```
 
-Configure this URL in GitHub → Repository Settings → Webhooks.
+Configure this URL in GitHub -> Repository Settings -> Webhooks.
