@@ -3,6 +3,7 @@ import { SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WebhooksService, WebhookEndpoint } from '../../services/webhooks.service';
 import { IntegrationsService, Connection } from '../../services/integrations.service';
+import { API_BASE_URL } from '../../core/api.config';
 
 @Component({
   selector: 'app-webhook-endpoints',
@@ -19,9 +20,11 @@ export class WebhookEndpoints implements OnInit {
   showForm = signal(false);
   error = signal('');
   loading = signal(false);
+  copiedId = signal<string | null>(null);
+  copyError = signal(false);
 
   form = { name: '', provider: 'github', connectionId: '' };
-  webhookBase = 'http://localhost:3000/webhooks/github/';
+  webhookBase = `${API_BASE_URL}/webhooks/github/`;
 
   ngOnInit() {
     this.webhooks.listEndpoints().subscribe((e) => this.endpoints.set(e));
@@ -49,6 +52,15 @@ export class WebhookEndpoints implements OnInit {
   }
 
   copyUrl(pathToken: string) {
-    navigator.clipboard.writeText(this.webhookBase + pathToken);
+    navigator.clipboard.writeText(this.webhookBase + pathToken).then(
+      () => {
+        this.copiedId.set(pathToken);
+        setTimeout(() => this.copiedId.set(null), 2000);
+      },
+      () => {
+        this.copyError.set(true);
+        setTimeout(() => this.copyError.set(false), 3000);
+      },
+    );
   }
 }

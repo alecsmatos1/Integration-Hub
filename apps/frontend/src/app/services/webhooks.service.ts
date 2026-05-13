@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../core/api.config';
 
-const API = 'http://localhost:3000';
+const API = API_BASE_URL;
 
 export interface WebhookEndpoint {
   id: string;
@@ -39,7 +40,10 @@ export class WebhooksService {
     return this.http.get<WebhookEndpoint[]>(`${API}/webhooks/endpoints`);
   }
 
-  listEvents() {
-    return this.http.get<WebhookEvent[]>(`${API}/webhooks/events`);
+  listEvents(filters?: { provider?: string; eventType?: string }) {
+    const params: Record<string, string> = {};
+    if (filters?.provider) params['provider'] = filters.provider;
+    if (filters?.eventType) params['eventType'] = filters.eventType;
+    return this.http.get<WebhookEvent[]>(`${API}/webhooks/events`, { params });
   }
 }

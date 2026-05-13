@@ -2,8 +2,9 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
+import { API_BASE_URL } from './api.config';
 
-const API = 'http://localhost:3000';
+const API = API_BASE_URL;
 
 export interface AuthUser {
   id: string;

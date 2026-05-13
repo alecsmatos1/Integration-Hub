@@ -2,8 +2,22 @@
   <h1>Webhook Events</h1>
   <p class="subtitle">Incoming events from all your endpoints</p>
 
+  <div class="filter-bar">
+    <label>
+      Provider
+      <select (change)="onProviderChange($event)">
+        <option value="">All</option>
+        <option value="github">GitHub</option>
+      </select>
+    </label>
+  </div>
+
   <div class="card">
-    @if (events().length === 0) {
+    @if (error()) {
+      <div class="alert error">{{ error() }}</div>
+    } @else if (loading()) {
+      <div class="empty">Loading events...</div>
+    } @else if (events().length === 0) {
       <div class="empty">No events received yet. Send a webhook to one of your endpoints.</div>
     } @else {
       <div class="table-wrap">

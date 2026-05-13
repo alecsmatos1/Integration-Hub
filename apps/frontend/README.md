@@ -19,7 +19,7 @@ npm run build    # production build
 npm test         # vitest unit tests
 ```
 
-The frontend proxies all API calls to `http://localhost:3000`. Start the backend first.
+The frontend uses `API_BASE_URL` in `src/app/core/api.config.ts` to reach the backend. The default value is `http://localhost:3000`. Change this constant before building for a deployed environment. Start the backend first.
 
 ## Pages
 

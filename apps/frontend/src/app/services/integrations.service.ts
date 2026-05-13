@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../core/api.config';
 
-const API = 'http://localhost:3000';
+const API = API_BASE_URL;
 
 export interface Provider {
   id: string;

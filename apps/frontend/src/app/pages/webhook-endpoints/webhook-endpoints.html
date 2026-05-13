@@ -44,6 +44,10 @@
     </div>
   }
 
+  @if (copyError()) {
+    <div class="alert error" style="margin-top:1rem">Could not copy to clipboard. Please copy the URL manually.</div>
+  }
+
   <div class="card" style="margin-top:1.5rem">
     @if (endpoints().length === 0) {
       <div class="empty">No endpoints yet. Create one above.</div>
@@ -66,7 +70,9 @@
                 <td>{{ ep.provider?.displayName ?? ep.provider?.name ?? ep.providerId }}</td>
                 <td>
                   <code>{{ webhookBase }}{{ ep.pathToken }}</code>
-                  <button class="btn-ghost" style="margin-left:.5rem" (click)="copyUrl(ep.pathToken)">Copy</button>
+                  <button class="btn-ghost" style="margin-left:.5rem" (click)="copyUrl(ep.pathToken)">
+                    {{ copiedId() === ep.pathToken ? 'Copied!' : 'Copy' }}
+                  </button>
                 </td>
                 <td><span class="badge" [class]="ep.isActive ? 'success' : 'failed'">{{ ep.isActive ? 'Active' : 'Inactive' }}</span></td>
                 <td>{{ ep.createdAt | slice:0:10 }}</td>

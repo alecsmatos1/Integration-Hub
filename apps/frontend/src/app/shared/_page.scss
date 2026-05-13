@@ -175,21 +175,6 @@ table {
     }
   }
 
-  .alert {
-    padding: 0.6rem 0.9rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-
-    &.error {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-
-    &.success {
-      background: #dcfce7;
-      color: #15803d;
-    }
-  }
 }
 
 code {
@@ -200,4 +185,14 @@ code {
   font-size: 0.82rem;
   color: #0f172a;
   word-break: break-all;
+}
+
+.alert {
+  padding: 0.6rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+
+  &.error   { background: #fee2e2; color: #b91c1c; }
+  &.success { background: #dcfce7; color: #15803d; }
+  &.info    { background: #e0f2fe; color: #0369a1; }
 }

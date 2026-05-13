@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../core/api.config';
 
-const API = 'http://localhost:3000';
+const API = API_BASE_URL;
 
 export interface WorkflowStep {
   id: string;
@@ -32,10 +33,12 @@ export interface CreateWorkflowDto {
 export interface WorkflowExecution {
   id: string;
   workflowId: string;
+  workflow?: { name: string };
   status: string;
   startedAt?: string;
   finishedAt?: string;
   durationMs?: number;
+  retryCount: number;
   errorMessage?: string;
   createdAt: string;
 }
