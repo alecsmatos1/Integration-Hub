@@ -1,0 +1,74 @@
+<div class="page">
+  <div class="action-bar">
+    <div>
+      <h1>Integrations</h1>
+      <p class="subtitle">Manage your provider connections</p>
+    </div>
+    <button class="btn-primary" (click)="showForm.set(!showForm())">
+      {{ showForm() ? 'Cancel' : '+ Add connection' }}
+    </button>
+  </div>
+
+  @if (showForm()) {
+    <div class="form-section">
+      <h2>New connection</h2>
+      @if (error()) { <div class="alert error">{{ error() }}</div> }
+      <form (ngSubmit)="submit()">
+        <div class="form-row">
+          <label>
+            Provider
+            <select [(ngModel)]="form.provider" name="provider">
+              @for (p of providers(); track p.id) {
+                <option [value]="p.name">{{ p.displayName }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Name
+            <input type="text" [(ngModel)]="form.name" name="name" required placeholder="My GitHub" />
+          </label>
+        </div>
+        <label>
+          Webhook secret (optional)
+          <input type="password" [(ngModel)]="form.secret" name="secret" placeholder="Leave blank if no HMAC verification" />
+        </label>
+        <button type="submit" class="btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Creating...' : 'Create connection' }}
+        </button>
+      </form>
+    </div>
+  }
+
+  @if (success()) {
+    <div class="alert success" style="margin-top:1rem">{{ success() }}</div>
+  }
+
+  <div class="card" style="margin-top:1.5rem">
+    @if (connections().length === 0) {
+      <div class="empty">No connections yet. Add one above.</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Provider</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (conn of connections(); track conn.id) {
+              <tr>
+                <td>{{ conn.name }}</td>
+                <td>{{ conn.provider?.displayName ?? conn.providerId }}</td>
+                <td><span class="badge" [class]="conn.isActive ? 'success' : 'failed'">{{ conn.isActive ? 'Active' : 'Inactive' }}</span></td>
+                <td>{{ conn.createdAt | slice:0:10 }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

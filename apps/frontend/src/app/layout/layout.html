@@ -1,0 +1,19 @@
+<div class="shell">
+  <nav class="sidebar">
+    <div class="brand">Integration Hub</div>
+    <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+    <a routerLink="/integrations" routerLinkActive="active">Integrations</a>
+    <a routerLink="/webhook-endpoints" routerLinkActive="active">Endpoints</a>
+    <a routerLink="/webhook-events" routerLinkActive="active">Events</a>
+    <a routerLink="/workflows" routerLinkActive="active">Workflows</a>
+    <a routerLink="/executions" routerLinkActive="active">Executions</a>
+    <div class="spacer"></div>
+    <div class="user-bar">
+      <span>{{ auth.user()?.email }}</span>
+      <button (click)="logout()">Logout</button>
+    </div>
+  </nav>
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

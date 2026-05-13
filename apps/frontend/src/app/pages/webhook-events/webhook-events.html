@@ -1,0 +1,37 @@
+<div class="page">
+  <h1>Webhook Events</h1>
+  <p class="subtitle">Incoming events from all your endpoints</p>
+
+  <div class="card">
+    @if (events().length === 0) {
+      <div class="empty">No events received yet. Send a webhook to one of your endpoints.</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Event type</th>
+              <th>Provider</th>
+              <th>Actor</th>
+              <th>Repository</th>
+              <th>Signature</th>
+              <th>Received</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ev of events(); track ev.id) {
+              <tr>
+                <td><code>{{ ev.eventType }}</code></td>
+                <td>{{ ev.provider }}</td>
+                <td>{{ ev.normalizedPayload.actor ?? '-' }}</td>
+                <td>{{ ev.normalizedPayload.repository ?? '-' }}</td>
+                <td><span class="badge" [class]="ev.signatureValid ? 'success' : 'failed'">{{ ev.signatureValid ? 'valid' : 'unverified' }}</span></td>
+                <td>{{ ev.receivedAt | date:'yyyy-MM-dd HH:mm' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

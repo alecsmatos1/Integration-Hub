@@ -1,0 +1,30 @@
+<div class="page">
+  <div class="action-bar">
+    <div>
+      <h1>Execution logs</h1>
+      <p class="subtitle"><code>{{ executionId() }}</code></p>
+    </div>
+    <a class="btn-primary" routerLink="/executions">Back to executions</a>
+  </div>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="empty">Loading logs...</div>
+    } @else if (logs().length === 0) {
+      <div class="empty">No logs found for this execution.</div>
+    } @else {
+      <div class="log-list">
+        @for (log of logs(); track log.id) {
+          <div class="log-entry" [class]="log.level">
+            <span class="log-level badge" [class]="log.level">{{ log.level }}</span>
+            <span class="log-msg">{{ log.message }}</span>
+            @if (log.metadata) {
+              <pre class="log-meta">{{ log.metadata | json }}</pre>
+            }
+            <span class="log-time">{{ log.createdAt | slice:0:19 }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

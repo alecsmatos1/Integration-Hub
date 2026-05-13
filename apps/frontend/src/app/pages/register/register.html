@@ -1,0 +1,30 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <h1>Integration Hub</h1>
+    <h2>Create account</h2>
+
+    @if (error()) {
+      <div class="alert error">{{ error() }}</div>
+    }
+
+    <form (ngSubmit)="submit()">
+      <label>
+        Name
+        <input type="text" [(ngModel)]="name" name="name" required autocomplete="name" />
+      </label>
+      <label>
+        Email
+        <input type="email" [(ngModel)]="email" name="email" required autocomplete="email" />
+      </label>
+      <label>
+        Password
+        <input type="password" [(ngModel)]="password" name="password" required autocomplete="new-password" />
+      </label>
+      <button type="submit" [disabled]="loading()">
+        {{ loading() ? 'Creating account...' : 'Create account' }}
+      </button>
+    </form>
+
+    <p class="switch">Already have an account? <a routerLink="/login">Sign in</a></p>
+  </div>
+</div>

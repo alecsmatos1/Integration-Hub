@@ -1,0 +1,108 @@
+<div class="page">
+  <div class="action-bar">
+    <div>
+      <h1>Workflows</h1>
+      <p class="subtitle">Automate actions triggered by webhook events</p>
+    </div>
+    <button class="btn-primary" (click)="showForm.set(!showForm())">
+      {{ showForm() ? 'Cancel' : '+ Create workflow' }}
+    </button>
+  </div>
+
+  @if (showForm()) {
+    <div class="form-section">
+      <h2>New workflow</h2>
+      @if (error()) { <div class="alert error">{{ error() }}</div> }
+      <form (ngSubmit)="submit()">
+        <label>
+          Name
+          <input type="text" [(ngModel)]="form.name" name="name" required placeholder="Notify on push" />
+        </label>
+        <div class="form-row">
+          <label>
+            Trigger provider
+            <select [(ngModel)]="form.triggerProvider" name="triggerProvider">
+              <option value="github">GitHub</option>
+            </select>
+          </label>
+          <label>
+            Trigger event
+            <input type="text" [(ngModel)]="form.triggerEvent" name="triggerEvent" required placeholder="push" />
+          </label>
+        </div>
+        <label>
+          Step type
+          <select [(ngModel)]="form.stepType" name="stepType">
+            <option value="log">Log message</option>
+            <option value="http_request_mock">HTTP request (mock)</option>
+          </select>
+        </label>
+        @if (form.stepType === 'log') {
+          <label>
+            Log message
+            <input type="text" [(ngModel)]="form.logMessage" name="logMessage" placeholder="Step executed" />
+          </label>
+        } @else {
+          <div class="form-row">
+            <label>
+              URL
+              <input type="url" [(ngModel)]="form.httpUrl" name="httpUrl" placeholder="https://example.com" />
+            </label>
+            <label>
+              Method
+              <select [(ngModel)]="form.httpMethod" name="httpMethod">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+              </select>
+            </label>
+          </div>
+        }
+        <button type="submit" class="btn-primary" [disabled]="loading()">
+          {{ loading() ? 'Creating...' : 'Create workflow' }}
+        </button>
+      </form>
+    </div>
+  }
+
+  @if (success()) {
+    <div class="alert success" style="margin-top:1rem">{{ success() }}</div>
+  }
+
+  <div class="card" style="margin-top:1.5rem">
+    @if (workflows().length === 0) {
+      <div class="empty">No workflows yet. Create one above.</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Trigger</th>
+              <th>Steps</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (wf of workflows(); track wf.id) {
+              <tr>
+                <td>{{ wf.name }}</td>
+                <td><code>{{ wf.triggerProvider }}/{{ wf.triggerEvent }}</code></td>
+                <td>{{ wf.steps.length }}</td>
+                <td><span class="badge" [class]="wf.isActive ? 'success' : 'failed'">{{ wf.isActive ? 'Active' : 'Inactive' }}</span></td>
+                <td>{{ wf.createdAt | slice:0:10 }}</td>
+                <td>
+                  <button class="btn-ghost" (click)="execute(wf.id)" [disabled]="executing() === wf.id">
+                    {{ executing() === wf.id ? 'Running...' : 'Run now' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

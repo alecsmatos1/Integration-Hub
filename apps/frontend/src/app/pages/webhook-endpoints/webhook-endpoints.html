@@ -1,0 +1,80 @@
+<div class="page">
+  <div class="action-bar">
+    <div>
+      <h1>Webhook Endpoints</h1>
+      <p class="subtitle">Receive webhooks from external services</p>
+    </div>
+    <button class="btn-primary" (click)="showForm.set(!showForm())">
+      {{ showForm() ? 'Cancel' : '+ Create endpoint' }}
+    </button>
+  </div>
+
+  @if (showForm()) {
+    <div class="form-section">
+      <h2>New endpoint</h2>
+      @if (error()) { <div class="alert error">{{ error() }}</div> }
+      <form (ngSubmit)="submit()">
+        <div class="form-row">
+          <label>
+            Name
+            <input type="text" [(ngModel)]="form.name" name="name" required placeholder="GitHub production hook" />
+          </label>
+          <label>
+            Provider
+            <select [(ngModel)]="form.provider" name="provider">
+              <option value="github">GitHub</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          Connection
+          <select [(ngModel)]="form.connectionId" name="connectionId" required>
+            @for (c of connections(); track c.id) {
+              <option [value]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </label>
+        <button type="submit" class="btn-primary" [disabled]="loading() || connections().length === 0">
+          {{ loading() ? 'Creating...' : 'Create endpoint' }}
+        </button>
+        @if (connections().length === 0) {
+          <p style="color:#b91c1c;font-size:0.8rem">Add a connection first before creating an endpoint.</p>
+        }
+      </form>
+    </div>
+  }
+
+  <div class="card" style="margin-top:1.5rem">
+    @if (endpoints().length === 0) {
+      <div class="empty">No endpoints yet. Create one above.</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Provider</th>
+              <th>Webhook URL</th>
+              <th>Status</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ep of endpoints(); track ep.id) {
+              <tr>
+                <td>{{ ep.name }}</td>
+                <td>{{ ep.provider?.displayName ?? ep.provider?.name ?? ep.providerId }}</td>
+                <td>
+                  <code>{{ webhookBase }}{{ ep.pathToken }}</code>
+                  <button class="btn-ghost" style="margin-left:.5rem" (click)="copyUrl(ep.pathToken)">Copy</button>
+                </td>
+                <td><span class="badge" [class]="ep.isActive ? 'success' : 'failed'">{{ ep.isActive ? 'Active' : 'Inactive' }}</span></td>
+                <td>{{ ep.createdAt | slice:0:10 }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
