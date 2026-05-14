@@ -1,9 +1,6 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IntegrationsService } from '../../services/integrations.service';
-import { WebhooksService } from '../../services/webhooks.service';
-import { WorkflowsService } from '../../services/workflows.service';
-import { ExecutionsService } from '../../services/executions.service';
+import { DashboardStatsService } from '../../services/dashboard-stats.service';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
@@ -14,28 +11,11 @@ import { AuthService } from '../../core/auth.service';
 })
 export class Dashboard implements OnInit {
   auth = inject(AuthService);
-  private integrations = inject(IntegrationsService);
-  private webhooks = inject(WebhooksService);
-  private workflows = inject(WorkflowsService);
-  private executions = inject(ExecutionsService);
+  private dashboardStats = inject(DashboardStatsService);
 
-  stats = signal({ connections: 0, endpoints: 0, events: 0, workflows: 0, executions: 0 });
+  stats = this.dashboardStats.stats;
 
   ngOnInit() {
-    this.integrations.listConnections().subscribe((c) =>
-      this.stats.update((s) => ({ ...s, connections: c.length })),
-    );
-    this.webhooks.listEndpoints().subscribe((e) =>
-      this.stats.update((s) => ({ ...s, endpoints: e.length })),
-    );
-    this.webhooks.listEvents().subscribe((e) =>
-      this.stats.update((s) => ({ ...s, events: e.length })),
-    );
-    this.workflows.list().subscribe((w) =>
-      this.stats.update((s) => ({ ...s, workflows: w.length })),
-    );
-    this.executions.list().subscribe((e) =>
-      this.stats.update((s) => ({ ...s, executions: e.length })),
-    );
+    this.dashboardStats.refresh();
   }
 }
