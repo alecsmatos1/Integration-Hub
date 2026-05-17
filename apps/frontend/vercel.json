@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm ci && npm run build",
+  "outputDirectory": "dist/frontend/browser",
+  "framework": "angular",
+  "rewrites": [
+    {
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
