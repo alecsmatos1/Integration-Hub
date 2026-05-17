@@ -14,6 +14,7 @@ export class Dashboard implements OnInit {
   private dashboardStats = inject(DashboardStatsService);
 
   stats = this.dashboardStats.stats;
+  loadState = this.dashboardStats.loadState;
 
   ngOnInit() {
     this.dashboardStats.refresh();

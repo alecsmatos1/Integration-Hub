@@ -36,7 +36,7 @@
             @for (ev of events(); track ev.id) {
               <tr>
                 <td><code>{{ ev.eventType }}</code></td>
-                <td>{{ ev.provider }}</td>
+                <td>{{ ev.provider === 'github' ? 'GitHub' : ev.provider }}</td>
                 <td>{{ ev.normalizedPayload.actor ?? '-' }}</td>
                 <td>{{ ev.normalizedPayload.repository ?? '-' }}</td>
                 <td><span class="badge" [class]="ev.signatureValid ? 'success' : 'failed'">{{ ev.signatureValid ? 'valid' : 'unverified' }}</span></td>

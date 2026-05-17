@@ -5,6 +5,8 @@ import { WebhooksService } from './webhooks.service';
 import { WorkflowsService } from './workflows.service';
 import { ExecutionsService } from './executions.service';
 
+export type StatsLoadState = 'idle' | 'loading' | 'error';
+
 export interface DashboardStats {
   connections: number;
   endpoints: number;
@@ -23,6 +25,7 @@ export class DashboardStatsService {
   private readonly STORAGE_KEY = 'dashboard_stats';
 
   readonly stats = signal<DashboardStats>(this.loadCache());
+  readonly loadState = signal<StatsLoadState>('idle');
 
   private loadCache(): DashboardStats {
     const empty: DashboardStats = { connections: 0, endpoints: 0, events: 0, workflows: 0, executions: 0 };
@@ -39,22 +42,29 @@ export class DashboardStatsService {
   }
 
   refresh(): void {
+    this.loadState.set('loading');
     forkJoin({
       connections: this.integrations.listConnections(),
       endpoints: this.webhooks.listEndpoints(),
       events: this.webhooks.listEvents(),
       workflows: this.workflows.list(),
       executions: this.executions.list(),
-    }).subscribe(({ connections, endpoints, events, workflows, executions }) => {
-      const stats: DashboardStats = {
-        connections: connections.length,
-        endpoints: endpoints.length,
-        events: events.length,
-        workflows: workflows.length,
-        executions: executions.length,
-      };
-      this.stats.set(stats);
-      this.saveCache(stats);
+    }).subscribe({
+      next: ({ connections, endpoints, events, workflows, executions }) => {
+        const stats: DashboardStats = {
+          connections: connections.length,
+          endpoints: endpoints.length,
+          events: events.length,
+          workflows: workflows.length,
+          executions: executions.length,
+        };
+        this.stats.set(stats);
+        this.saveCache(stats);
+        this.loadState.set('idle');
+      },
+      error: () => {
+        this.loadState.set('error');
+      },
     });
   }
 }

@@ -2,6 +2,10 @@
   <h1>Welcome, {{ auth.user()?.name || auth.user()?.email }}</h1>
   <p class="subtitle">Your integration hub overview</p>
 
+  @if (loadState() === 'error') {
+    <div class="alert error" style="margin-bottom:1rem">Could not refresh stats - showing cached values.</div>
+  }
+
   <div class="stats-grid">
     <a class="stat-card" routerLink="/integrations">
       <div class="stat-value">{{ stats().connections }}</div>
