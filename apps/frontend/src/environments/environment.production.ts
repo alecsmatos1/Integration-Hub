@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: '',
+  apiBaseUrl: 'https://integration-hub-production-fd21.up.railway.app',
 };
