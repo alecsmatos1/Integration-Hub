@@ -20,8 +20,21 @@ Built as a portfolio project demonstrating NestJS, Angular, Prisma, JWT auth, HM
 | Multi-user isolation | All queries scoped by `userId`; cross-user access returns 404 |
 | API security | CORS, rate limiting via `@nestjs/throttler`, secret stripping from responses |
 | Frontend | Angular 21 standalone components, signals, lazy routes, HTTP interceptors |
-| Testing | Jest e2e (39 tests), unit tests (21), Vitest frontend (8) |
+| Testing | Jest e2e (43 tests), unit tests (23), Vitest frontend (8) |
 | CI/CD | GitHub Actions with PostgreSQL service container |
+
+---
+
+## Portfolio Highlights
+
+- Full-stack SaaS-style architecture with NestJS and Angular.
+- Real GitHub webhook ingestion with HMAC-SHA256 signature verification.
+- Workflow execution pipeline with persisted per-step execution logs.
+- Multi-user isolation — all resources scoped by authenticated user.
+- JWT access + refresh token auth with Passport strategy.
+- CI pipeline with PostgreSQL service container and automated tests.
+
+> The current MVP focuses on GitHub webhooks. The workflow engine is intentionally linear — steps run in sequence with full log output. Other providers (Slack, Discord) are planned but not yet implemented.
 
 ---
 
@@ -101,13 +114,30 @@ npm start                     # http://localhost:4200
 ## Demo Flow
 
 1. Register at `http://localhost:4200/register`
-2. Go to **Integrations** -> Add a GitHub connection (optionally set a webhook secret)
-3. Go to **Endpoints** -> Create an endpoint -> copy the webhook URL
-4. Add that URL to a GitHub repository -> Settings -> Webhooks
-5. Push a commit - the event appears in **Events**
-6. Go to **Workflows** -> Create a workflow with trigger `github / push` and a `log` step
-7. The next push triggers it automatically, or click **Run now**
-8. Go to **Executions** -> click **View logs** to see per-step output
+2. Go to **Integrations** → Add a GitHub connection (name it anything; set secret to `demo-secret`)
+3. Go to **Endpoints** → Create an endpoint → copy the webhook URL (contains a `pathToken`)
+4. Go to **Workflows** → Create a workflow with trigger `github / push` and a `log` step
+5. Send a simulated signed webhook (PowerShell):
+
+```powershell
+$payload='{"ref":"refs/heads/main","repository":{"full_name":"demo/repo"},"sender":{"login":"demo-user"}}'
+$secret='demo-secret'
+$hmac=[System.Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes($secret))
+$hash=($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($payload))|ForEach-Object{$_.ToString("x2")})-join''
+$sig="sha256=$hash"
+$body=[System.Text.Encoding]::UTF8.GetBytes($payload)
+$req=[System.Net.HttpWebRequest]::Create("http://localhost:3000/webhooks/github/<pathToken>")
+$req.Method="POST"; $req.ContentType="application/json"
+$req.Headers.Add("X-GitHub-Event","push")
+$req.Headers.Add("X-Hub-Signature-256",$sig)
+$req.ContentLength=$body.Length
+$s=$req.GetRequestStream(); $s.Write($body,0,$body.Length); $s.Close()
+$req.GetResponse().GetResponseStream()|%{(New-Object System.IO.StreamReader($_)).ReadToEnd()}
+```
+
+6. Go to **Events** → confirm the push event was received with `signatureValid: true`
+7. Go to **Executions** → confirm `success` status
+8. Click **View logs** → see per-step output
 
 ---
 
@@ -162,15 +192,33 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 ## Screenshots
 
-> _Screenshots coming after deployment. See the [demo flow](#demo-flow) to run it locally._
+**Dashboard** — overview with live counts of connections, endpoints, events, and executions.
 
-| Screen | Description |
-|---|---|
-| `docs/assets/dashboard.png` | Overview with connection, endpoint, event, and execution counts |
-| `docs/assets/webhook-endpoints.png` | Endpoint list with copyable webhook URLs |
-| `docs/assets/webhook-events.png` | Incoming event log with HMAC signature status |
-| `docs/assets/executions.png` | Execution history with status badges |
-| `docs/assets/execution-logs.png` | Per-step log output |
+![Dashboard](docs/assets/dashboard.png)
+
+**Integrations** — manage GitHub connections with optional HMAC webhook secrets.
+
+![Integrations](docs/assets/integrations.png)
+
+**Webhook Endpoints** — copyable webhook URLs per provider connection.
+
+![Webhook Endpoints](docs/assets/webhook-endpoints.png)
+
+**Webhook Events** — incoming event log with HMAC signature validation status.
+
+![Webhook Events](docs/assets/webhook-events.png)
+
+**Workflows** — trigger configuration (provider + event type) and step definitions.
+
+![Workflows](docs/assets/workflows.png)
+
+**Executions** — execution history with status badges, duration, and retry count.
+
+![Executions](docs/assets/executions.png)
+
+**Execution Logs** — per-step log output for every workflow run.
+
+![Execution Logs](docs/assets/execution-logs.png)
 
 ---
 
@@ -191,11 +239,25 @@ cd apps/frontend && npm test -- --watch=false
 
 ## Roadmap
 
-- [ ] Slack / Discord / OpenAI providers
-- [ ] Real HTTP step (not mock)
-- [ ] Retry logic with exponential backoff
-- [ ] Workflow editor UI (drag-and-drop steps)
-- [ ] Rate limiting and API keys
+**Done**
+- JWT auth with access + refresh tokens
+- GitHub webhook receiver with HMAC verification
+- Webhook event history with filtering
+- Linear workflow execution engine
+- Real HTTP workflow step
+- Execution logs per step
+- Angular dashboard with signals and lazy routes
+- CI pipeline with PostgreSQL service container
+
+**Next**
+- Public deployment (Railway + Vercel)
+- Frontend API URL driven by environment variable
+
+**Later**
+- Slack / Discord providers
+- BullMQ + Redis queue for execution
+- Workflow editor UI
+- Encrypted secrets at rest
 
 ---
 
