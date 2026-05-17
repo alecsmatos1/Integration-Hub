@@ -19,7 +19,12 @@ npm run build    # production build
 npm test         # vitest unit tests
 ```
 
-The frontend uses `API_BASE_URL` in `src/app/core/api.config.ts` to reach the backend. The default value is `http://localhost:3000`. Change this constant before building for a deployed environment. Start the backend first.
+The frontend reads the backend URL from Angular environment files:
+
+- Local development: `src/environments/environment.ts`
+- Production build: `src/environments/environment.production.ts`
+
+`src/app/core/api.config.ts` exports the selected `environment.apiBaseUrl`, so it should not be edited per environment. Start the backend first when running locally.
 
 ## Pages
 
