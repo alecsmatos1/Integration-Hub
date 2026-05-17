@@ -16,7 +16,7 @@ Built as a portfolio project demonstrating NestJS, Angular, Prisma, JWT auth, HM
 | Authentication | JWT access + refresh tokens, bcrypt hashing, Passport strategy |
 | Webhook security | HMAC-SHA256 signature verification using raw request body |
 | Data persistence | Prisma ORM with PostgreSQL, migrations, relational queries |
-| Async execution | In-memory queue with `setImmediate`, isolated WorkflowRunner |
+| Async execution | In-memory queue with `setImmediate`, isolated WorkflowRunner; `log` and `http_request` step types |
 | Multi-user isolation | All queries scoped by `userId`; cross-user access returns 404 |
 | API security | CORS, rate limiting via `@nestjs/throttler`, secret stripping from responses |
 | Frontend | Angular 21 standalone components, signals, lazy routes, HTTP interceptors |
@@ -74,6 +74,12 @@ GitHub Webhook -> POST /webhooks/github/:pathToken
 | Frontend | Angular 21 (standalone components, signals, lazy routes) |
 | Testing | Jest 30 (backend), Vitest 4 (frontend) |
 | CI | GitHub Actions |
+
+---
+
+## Live Demo
+
+> Public deployment is in progress (Railway + Vercel). Until then, follow the Quick Start below to run it locally in under 5 minutes.
 
 ---
 
@@ -243,8 +249,8 @@ cd apps/frontend && npm test -- --watch=false
 - JWT auth with access + refresh tokens
 - GitHub webhook receiver with HMAC verification
 - Webhook event history with filtering
-- Linear workflow execution engine
-- Real HTTP workflow step
+- Linear workflow execution engine with `log` and `http_request` step types
+- HTTP request step: real `fetch` with AbortController timeout, status logging, response preview
 - Execution logs per step
 - Angular dashboard with signals and lazy routes
 - CI pipeline with PostgreSQL service container

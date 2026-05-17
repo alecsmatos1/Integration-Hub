@@ -6,9 +6,9 @@ This document describes how to deploy the Integration Hub backend and frontend t
 
 | Component | Recommended target |
 |---|---|
-| Backend (NestJS) | Railway, Render, or Fly.io |
-| Frontend (Angular) | Vercel or Netlify |
-| Database (PostgreSQL) | Railway PostgreSQL, Supabase, or Neon |
+| Backend (NestJS) | Railway |
+| Frontend (Angular) | Vercel |
+| Database (PostgreSQL) | Railway PostgreSQL |
 
 ---
 
@@ -40,25 +40,10 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 2. Add a PostgreSQL plugin - Railway sets `DATABASE_URL` automatically.
 3. Connect your GitHub repo and select `apps/backend` as the root.
 4. Set the environment variables above.
-5. Set the build command: `npm install && npx prisma migrate deploy && npm run build`
-6. Set the start command: `node dist/src/main`
-
-### Render
-
-1. Create a new Web Service.
-2. Set the root directory to `apps/backend`.
-3. Build command: `npm install && npx prisma migrate deploy && npm run build`
-4. Start command: `node dist/src/main`
-5. Add a PostgreSQL database and copy the connection string to `DATABASE_URL`.
-6. Set all other environment variables in the Render dashboard.
-
-### Fly.io
-
-1. Install the Fly CLI: `curl -L https://fly.io/install.sh | sh`
-2. From `apps/backend`: `fly launch`
-3. Set secrets: `fly secrets set JWT_SECRET=... JWT_REFRESH_SECRET=... CORS_ORIGIN=...`
-4. Attach a Postgres instance: `fly postgres attach`
-5. On each deploy run migrations: add `npx prisma migrate deploy` to your release command.
+5. Set the build command: `npm ci && npx prisma generate && npm run build`
+6. Set the pre-deploy command: `npx prisma migrate deploy`
+7. Set the start command: `npm run start:prod`
+8. Set the health check path: `/health`
 
 ---
 
@@ -66,37 +51,36 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 ### Configuring the API URL
 
-Before building for production, set the API base URL in:
+The frontend uses Angular environment files to switch the API base URL between local and production builds.
+
+**Local development** (`http://localhost:3000`) is set in:
 
 ```
-apps/frontend/src/app/core/api.config.ts
+apps/frontend/src/environments/environment.ts
+```
+
+**Production** URL is set in:
+
+```
+apps/frontend/src/environments/environment.production.ts
 ```
 
 ```typescript
-export const API_BASE_URL = 'https://your-backend-domain.railway.app';
+export const environment = {
+  production: true,
+  apiBaseUrl: 'https://your-backend-domain.railway.app',
+};
 ```
 
-For Vercel/Netlify, you can also inject this at build time using a build-time environment variable and Angular's `fileReplacements` if needed. For MVP, editing `api.config.ts` is sufficient.
+Angular's `fileReplacements` in `angular.json` automatically swaps the file when you run `npm run build` (which uses the `production` configuration). You do not need to edit `api.config.ts` manually.
 
 ### Vercel
 
 1. Import the repository into Vercel.
 2. Set the root directory to `apps/frontend`.
-3. Build command: `npm run build`
+3. Build command: `npm ci && npm run build`
 4. Output directory: `dist/frontend/browser`
-5. Update `API_BASE_URL` in `api.config.ts` before deploying.
-
-### Netlify
-
-1. Connect the repository to Netlify.
-2. Set the base directory to `apps/frontend`.
-3. Build command: `npm run build`
-4. Publish directory: `dist/frontend/browser`
-5. Add a `apps/frontend/public/_redirects` file with:
-   ```
-   /*  /index.html  200
-   ```
-   This ensures Angular's client-side routing works correctly.
+5. Set the production API URL in `apps/frontend/src/environments/environment.production.ts` after the Railway backend URL exists.
 
 ---
 
