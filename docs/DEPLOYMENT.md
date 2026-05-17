@@ -10,6 +10,14 @@ This document describes how to deploy the Integration Hub backend and frontend t
 | Frontend (Angular) | Vercel |
 | Database (PostgreSQL) | Railway PostgreSQL |
 
+Current public deployment:
+
+| Service | URL |
+|---|---|
+| Frontend | https://integration-hub-eight.vercel.app/login |
+| Backend health check | https://integration-hub-production-fd21.up.railway.app/health |
+| Backend API docs | https://integration-hub-production-fd21.up.railway.app/api |
+
 ---
 
 ## Backend Deployment
@@ -91,6 +99,12 @@ The backend reads `CORS_ORIGIN` from the environment. Set it to your frontend's 
 
 ```
 CORS_ORIGIN=https://your-frontend.vercel.app
+```
+
+Current production value:
+
+```
+CORS_ORIGIN=https://integration-hub-eight.vercel.app
 ```
 
 Multiple origins are not supported in the current implementation. If needed, extend `main.ts` to parse a comma-separated list.

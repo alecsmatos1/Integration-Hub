@@ -79,7 +79,9 @@ GitHub Webhook -> POST /webhooks/github/:pathToken
 
 ## Live Demo
 
-> Public deployment is in progress (Railway + Vercel). Until then, follow the Quick Start below to run it locally in under 5 minutes.
+- Frontend: [integration-hub-eight.vercel.app](https://integration-hub-eight.vercel.app/login)
+- Backend health check: [Railway `/health`](https://integration-hub-production-fd21.up.railway.app/health)
+- API docs: [Railway Swagger UI](https://integration-hub-production-fd21.up.railway.app/api)
 
 ---
 
@@ -254,10 +256,11 @@ cd apps/frontend && npm test -- --watch=false
 - Execution logs per step
 - Angular dashboard with signals and lazy routes
 - CI pipeline with PostgreSQL service container
+- Public deployment on Railway + Vercel
 
 **Next**
-- Public deployment (Railway + Vercel)
-- Frontend API URL driven by environment variable
+- Production smoke test against the public URLs
+- Frontend API URL driven by deploy-time environment variable
 
 **Later**
 - Slack / Discord providers
