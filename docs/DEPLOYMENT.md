@@ -39,7 +39,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 1. Create a new Railway project.
 2. Add a PostgreSQL plugin - Railway sets `DATABASE_URL` automatically.
 3. Connect your GitHub repo and select `apps/backend` as the root.
-4. Confirm the backend service has access to `DATABASE_URL`. If Railway created it on the database service only, add a reference variable on the backend service.
+4. Confirm the backend service has access to `DATABASE_URL` before the pre-deploy migration runs. If Railway created it on the database service only, add a reference variable on the backend service.
 5. Set the other environment variables above.
 6. Set the build command: `npx prisma generate && npm run build`
 7. Set the pre-deploy command: `npx prisma migrate deploy`
