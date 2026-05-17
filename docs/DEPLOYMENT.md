@@ -40,7 +40,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 2. Add a PostgreSQL plugin - Railway sets `DATABASE_URL` automatically.
 3. Connect your GitHub repo and select `apps/backend` as the root.
 4. Set the environment variables above.
-5. Set the build command: `npm ci && npx prisma generate && npm run build`
+5. Set the build command: `npx prisma generate && npm run build`
 6. Set the pre-deploy command: `npx prisma migrate deploy`
 7. Set the start command: `npm run start:prod`
 8. Set the health check path: `/health`
@@ -78,7 +78,7 @@ Angular's `fileReplacements` in `angular.json` automatically swaps the file when
 
 1. Import the repository into Vercel.
 2. Set the root directory to `apps/frontend`.
-3. Build command: `npm ci && npm run build`
+3. Build command: `npm run build`
 4. Output directory: `dist/frontend/browser`
 5. Set the production API URL in `apps/frontend/src/environments/environment.production.ts` after the Railway backend URL exists.
 
