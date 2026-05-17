@@ -100,6 +100,75 @@ describe('WorkflowRunner', () => {
     expect(failCall[0].data.errorMessage).toContain('totally_unknown');
   });
 
+  describe('http_request step', () => {
+    beforeEach(() => {
+      global.fetch = jest.fn() as jest.Mock;
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('logs success and transitions to success for 2xx response', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        status: 200,
+        text: () => Promise.resolve('{"ok":true}'),
+      });
+      const execution = makeExecution([
+        { order: 1, type: 'http_request', config: { url: 'https://api.test', method: 'GET' } },
+      ]);
+      (prisma.workflowExecution.findUnique as jest.Mock).mockResolvedValue(execution);
+      (prisma.workflowExecution.update as jest.Mock).mockResolvedValue({});
+      (prisma.executionLog.create as jest.Mock).mockResolvedValue({});
+
+      await runner.run('exec-1');
+
+      const updates = (prisma.workflowExecution.update as jest.Mock).mock.calls;
+      expect(updates.at(-1)[0].data.status).toBe('success');
+      const messages: string[] = (prisma.executionLog.create as jest.Mock).mock.calls.map(
+        (c) => c[0].data.message as string,
+      );
+      expect(messages.some((m) => m.includes('GET') && m.includes('200'))).toBe(true);
+    });
+
+    it('transitions to failed when response status is 500', async () => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        status: 500,
+        text: () => Promise.resolve('Internal Server Error'),
+      });
+      const execution = makeExecution([
+        { order: 1, type: 'http_request', config: { url: 'https://api.test/fail', method: 'POST' } },
+      ]);
+      (prisma.workflowExecution.findUnique as jest.Mock).mockResolvedValue(execution);
+      (prisma.workflowExecution.update as jest.Mock).mockResolvedValue({});
+      (prisma.executionLog.create as jest.Mock).mockResolvedValue({});
+
+      await runner.run('exec-1');
+
+      const updates = (prisma.workflowExecution.update as jest.Mock).mock.calls;
+      const failCall = updates.find((c) => c[0].data.status === 'failed');
+      expect(failCall).toBeDefined();
+      expect(failCall[0].data.errorMessage).toContain('500');
+    });
+
+    it('transitions to failed when fetch throws a network error', async () => {
+      (global.fetch as jest.Mock).mockRejectedValue(new TypeError('Failed to fetch'));
+      const execution = makeExecution([
+        { order: 1, type: 'http_request', config: { url: 'https://invalid.invalid', method: 'GET' } },
+      ]);
+      (prisma.workflowExecution.findUnique as jest.Mock).mockResolvedValue(execution);
+      (prisma.workflowExecution.update as jest.Mock).mockResolvedValue({});
+      (prisma.executionLog.create as jest.Mock).mockResolvedValue({});
+
+      await runner.run('exec-1');
+
+      const updates = (prisma.workflowExecution.update as jest.Mock).mock.calls;
+      const failCall = updates.find((c) => c[0].data.status === 'failed');
+      expect(failCall).toBeDefined();
+      expect(failCall[0].data.errorMessage).toContain('Failed to fetch');
+    });
+  });
+
   it('executes multiple steps in ascending order', async () => {
     const execution = makeExecution([
       { order: 1, type: 'log', config: { message: 'first' } },

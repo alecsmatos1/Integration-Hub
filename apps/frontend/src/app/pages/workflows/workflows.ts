@@ -23,7 +23,7 @@ export class Workflows implements OnInit {
     name: '',
     triggerProvider: 'github',
     triggerEvent: 'push',
-    stepType: 'log' as 'log' | 'http_request_mock',
+    stepType: 'log' as 'log' | 'http_request',
     logMessage: 'Step executed',
     httpUrl: 'https://example.com',
     httpMethod: 'POST',
@@ -58,7 +58,7 @@ export class Workflows implements OnInit {
         next: () => {
           this.success.set('Workflow created');
           this.showForm.set(false);
-          this.form = { name: '', triggerProvider: 'github', triggerEvent: 'push', stepType: 'log', logMessage: 'Step executed', httpUrl: 'https://example.com', httpMethod: 'POST' };
+          this.form = { name: '', triggerProvider: 'github', triggerEvent: 'push', stepType: 'log' as 'log' | 'http_request', logMessage: 'Step executed', httpUrl: 'https://example.com', httpMethod: 'POST' };
           this.load();
           this.loading.set(false);
         },

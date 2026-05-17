@@ -17,8 +17,8 @@ export class WorkflowStepDto {
   @Min(1)
   order: number;
 
-  @ApiProperty({ example: 'log', enum: ['log', 'http_request_mock'] })
-  @IsIn(['log', 'http_request_mock'])
+  @ApiProperty({ example: 'log', enum: ['log', 'http_request', 'http_request_mock'] })
+  @IsIn(['log', 'http_request', 'http_request_mock'])
   type: string;
 
   @ApiPropertyOptional()

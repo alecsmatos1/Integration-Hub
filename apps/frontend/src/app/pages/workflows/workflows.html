@@ -34,7 +34,7 @@
           Step type
           <select [(ngModel)]="form.stepType" name="stepType">
             <option value="log">Log message</option>
-            <option value="http_request_mock">HTTP request (mock)</option>
+            <option value="http_request">HTTP request</option>
           </select>
         </label>
         @if (form.stepType === 'log') {

@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { createServer, Server } from 'http';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
@@ -406,6 +407,123 @@ describe('Integration Hub (e2e)', () => {
       .post('/executions/00000000-0000-0000-0000-000000000000/retry')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(404);
+  });
+
+  // -- HTTP Request Workflow -----------------------------------------------------
+
+  describe('http_request workflow', () => {
+    let testHttpServer: Server;
+    let testHttpUrl: string;
+    let httpWorkflowId: string;
+    let httpExecutionId: string;
+    let failWorkflowId: string;
+    let failExecutionId: string;
+
+    beforeAll(async () => {
+      testHttpServer = createServer((req, res) => {
+        if (req.url === '/todos/1') {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true }));
+          return;
+        }
+
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not found' }));
+      });
+
+      await new Promise<void>((resolve) => testHttpServer.listen(0, '127.0.0.1', resolve));
+      const address = testHttpServer.address();
+      if (!address || typeof address === 'string') throw new Error('Test HTTP server did not start');
+      testHttpUrl = `http://127.0.0.1:${address.port}/todos/1`;
+    });
+
+    afterAll(async () => {
+      await new Promise<void>((resolve, reject) => {
+        testHttpServer.close((err) => (err ? reject(err) : resolve()));
+      });
+    });
+
+    it('POST /workflows -> 201 accepts http_request step type', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/workflows')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'HTTP Request Workflow',
+          triggerProvider: 'github',
+          triggerEvent: 'push',
+          steps: [
+            {
+              order: 1,
+              type: 'http_request',
+              config: { url: testHttpUrl, method: 'GET' },
+            },
+          ],
+        })
+        .expect(201);
+
+      expect(res.body).toHaveProperty('id');
+      expect(res.body.steps[0].type).toBe('http_request');
+      httpWorkflowId = res.body.id;
+    });
+
+    it('POST /workflows/:id/execute -> 201 starts http_request execution', async () => {
+      const res = await request(app.getHttpServer())
+        .post(`/workflows/${httpWorkflowId}/execute`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(201);
+
+      expect(res.body).toHaveProperty('id');
+      httpExecutionId = res.body.id;
+    });
+
+    it('GET /executions/:id/logs has http_request log entry after runner completes', async () => {
+      await new Promise((r) => setTimeout(r, 800));
+
+      const res = await request(app.getHttpServer())
+        .get(`/executions/${httpExecutionId}/logs`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      const logs = res.body as Array<{ message: string; metadata?: Record<string, unknown> }>;
+      expect(logs.length).toBeGreaterThan(0);
+      const httpLog = logs.find((l) => l.message.includes('GET') && l.message.includes(testHttpUrl));
+      expect(httpLog).toBeDefined();
+      expect(httpLog?.metadata).toMatchObject({ method: 'GET', status: expect.any(Number) });
+    });
+
+    it('http_request execution with invalid URL transitions to failed', async () => {
+      const wfRes = await request(app.getHttpServer())
+        .post('/workflows')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Failing HTTP Workflow',
+          triggerProvider: 'github',
+          triggerEvent: 'push',
+          steps: [
+            { order: 1, type: 'http_request', config: { url: 'http://localhost:1/unreachable', method: 'GET' } },
+          ],
+        })
+        .expect(201);
+      failWorkflowId = wfRes.body.id;
+
+      const execRes = await request(app.getHttpServer())
+        .post(`/workflows/${failWorkflowId}/execute`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(201);
+      failExecutionId = execRes.body.id;
+
+      await new Promise((r) => setTimeout(r, 500));
+
+      const detailRes = await request(app.getHttpServer())
+        .get('/executions')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      const executions = detailRes.body as Array<{ id: string; status: string }>;
+      const failedExec = executions.find((e) => e.id === failExecutionId);
+      expect(failedExec).toBeDefined();
+      expect(failedExec?.status).toBe('failed');
+    });
   });
 
   // -- Multi-User Isolation -----------------------------------------------------

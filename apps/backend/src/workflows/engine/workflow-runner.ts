@@ -71,6 +71,52 @@ export class WorkflowRunner {
         await this.writeLog(executionId, step.id, 'info', message);
         break;
       }
+      case 'http_request': {
+        const url = config.url as string;
+        if (!url) throw new Error('http_request step requires a url');
+        const method = ((config.method as string) ?? 'GET').toUpperCase();
+        const headers = (config.headers as Record<string, string>) ?? {};
+        const body = config.body !== undefined ? JSON.stringify(config.body) : undefined;
+        const timeoutMs = (config.timeoutMs as number) ?? 10_000;
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const reqStart = Date.now();
+
+        let status: number;
+        let responsePreview: string | undefined;
+        try {
+          const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json', ...headers },
+            body: method !== 'GET' && method !== 'HEAD' ? body : undefined,
+            signal: controller.signal,
+          });
+          clearTimeout(timer);
+          status = response.status;
+          const text = await response.text().catch(() => '');
+          responsePreview = text.slice(0, 200) || undefined;
+        } catch (fetchErr: unknown) {
+          clearTimeout(timer);
+          const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+          throw new Error(`HTTP request failed: ${msg}`);
+        }
+
+        const durationMs = Date.now() - reqStart;
+        const ok = status < 400;
+        const level = ok ? 'info' : 'error';
+        const summary = `${method} ${url} -> ${status} (${durationMs}ms)`;
+        await this.writeLog(executionId, step.id, level, summary, {
+          method,
+          url,
+          status,
+          durationMs,
+          responsePreview,
+        });
+
+        if (!ok) throw new Error(`HTTP ${status}: ${summary}`);
+        break;
+      }
       case 'http_request_mock': {
         const url = (config.url as string) ?? 'https://example.com';
         const method = (config.method as string) ?? 'GET';
