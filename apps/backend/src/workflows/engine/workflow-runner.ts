@@ -74,10 +74,27 @@ export class WorkflowRunner {
       case 'http_request': {
         const url = config.url as string;
         if (!url) throw new Error('http_request step requires a url');
+
+        let parsedUrl: URL;
+        try {
+          parsedUrl = new URL(url);
+        } catch {
+          throw new Error(`Invalid URL: "${url}"`);
+        }
+        if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+          throw new Error(`Unsupported protocol "${parsedUrl.protocol}" - only http and https are allowed`);
+        }
+
+        const ALLOWED_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const;
         const method = ((config.method as string) ?? 'GET').toUpperCase();
+        if (!ALLOWED_METHODS.includes(method as typeof ALLOWED_METHODS[number])) {
+          throw new Error(`Invalid method "${method}" - allowed: ${ALLOWED_METHODS.join(', ')}`);
+        }
+
         const headers = (config.headers as Record<string, string>) ?? {};
         const body = config.body !== undefined ? JSON.stringify(config.body) : undefined;
-        const timeoutMs = (config.timeoutMs as number) ?? 10_000;
+        const rawTimeout = config.timeoutMs as number | undefined;
+        const timeoutMs = Math.min(Math.max(rawTimeout ?? 10_000, 1_000), 30_000);
 
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), timeoutMs);

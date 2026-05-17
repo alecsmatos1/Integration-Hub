@@ -167,6 +167,75 @@ describe('WorkflowRunner', () => {
       expect(failCall).toBeDefined();
       expect(failCall[0].data.errorMessage).toContain('Failed to fetch');
     });
+
+    it('transitions to failed for invalid URL', async () => {
+      const execution = makeExecution([
+        { order: 1, type: 'http_request', config: { url: 'not-a-url', method: 'GET' } },
+      ]);
+      (prisma.workflowExecution.findUnique as jest.Mock).mockResolvedValue(execution);
+      (prisma.workflowExecution.update as jest.Mock).mockResolvedValue({});
+      (prisma.executionLog.create as jest.Mock).mockResolvedValue({});
+
+      await runner.run('exec-1');
+
+      const updates = (prisma.workflowExecution.update as jest.Mock).mock.calls;
+      const failCall = updates.find((c) => c[0].data.status === 'failed');
+      expect(failCall).toBeDefined();
+      expect(failCall[0].data.errorMessage).toContain('Invalid URL');
+    });
+
+    it('transitions to failed for disallowed protocol', async () => {
+      const execution = makeExecution([
+        { order: 1, type: 'http_request', config: { url: 'ftp://files.example.com', method: 'GET' } },
+      ]);
+      (prisma.workflowExecution.findUnique as jest.Mock).mockResolvedValue(execution);
+      (prisma.workflowExecution.update as jest.Mock).mockResolvedValue({});
+      (prisma.executionLog.create as jest.Mock).mockResolvedValue({});
+
+      await runner.run('exec-1');
+
+      const updates = (prisma.workflowExecution.update as jest.Mock).mock.calls;
+      const failCall = updates.find((c) => c[0].data.status === 'failed');
+      expect(failCall).toBeDefined();
+      expect(failCall[0].data.errorMessage).toContain('Unsupported protocol');
+    });
+
+    it('transitions to failed for invalid method', async () => {
+      const execution = makeExecution([
+        { order: 1, type: 'http_request', config: { url: 'https://api.test', method: 'CONNECT' } },
+      ]);
+      (prisma.workflowExecution.findUnique as jest.Mock).mockResolvedValue(execution);
+      (prisma.workflowExecution.update as jest.Mock).mockResolvedValue({});
+      (prisma.executionLog.create as jest.Mock).mockResolvedValue({});
+
+      await runner.run('exec-1');
+
+      const updates = (prisma.workflowExecution.update as jest.Mock).mock.calls;
+      const failCall = updates.find((c) => c[0].data.status === 'failed');
+      expect(failCall).toBeDefined();
+      expect(failCall[0].data.errorMessage).toContain('Invalid method');
+    });
+
+    it('truncates responsePreview at 200 chars', async () => {
+      const longBody = 'x'.repeat(500);
+      (global.fetch as jest.Mock).mockResolvedValue({
+        status: 200,
+        text: () => Promise.resolve(longBody),
+      });
+      const execution = makeExecution([
+        { order: 1, type: 'http_request', config: { url: 'https://api.test', method: 'GET' } },
+      ]);
+      (prisma.workflowExecution.findUnique as jest.Mock).mockResolvedValue(execution);
+      (prisma.workflowExecution.update as jest.Mock).mockResolvedValue({});
+      (prisma.executionLog.create as jest.Mock).mockResolvedValue({});
+
+      await runner.run('exec-1');
+
+      const logCalls = (prisma.executionLog.create as jest.Mock).mock.calls;
+      const httpLog = logCalls.find((c) => (c[0].data.metadata as Record<string, unknown>)?.responsePreview !== undefined);
+      const preview = (httpLog[0].data.metadata as Record<string, unknown>).responsePreview as string;
+      expect(preview.length).toBeLessThanOrEqual(200);
+    });
   });
 
   it('executes multiple steps in ascending order', async () => {
