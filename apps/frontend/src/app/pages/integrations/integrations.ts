@@ -30,6 +30,16 @@ export class Integrations implements OnInit {
     this.svc.listConnections().subscribe((c) => this.connections.set(c));
   }
 
+  statusBadge(status: string): string {
+    const map: Record<string, string> = {
+      success: 'badge-success', failed: 'badge-danger',
+      running: 'badge-info', pending: 'badge-warning',
+      error: 'badge-danger', warn: 'badge-warning',
+      received: 'badge-success', processed: 'badge-success',
+    };
+    return map[status] ?? 'badge-neutral';
+  }
+
   submit() {
     this.error.set('');
     this.success.set('');

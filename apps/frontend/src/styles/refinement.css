@@ -1,0 +1,358 @@
+/* =============================================================
+   Integration Hub — Refinement pass
+   Atmospheric depth, live indicators, microinteractions.
+   Loaded AFTER base.css to override and extend.
+   ============================================================= */
+
+/* ── Atmospheric canvas ───────────────────────────────────── */
+.app::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% -10%, oklch(0.70 0.15 290 / 0.10), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 0% 100%, oklch(0.72 0.13 235 / 0.06), transparent 55%);
+  z-index: 0;
+}
+[data-theme="light"] .app::before {
+  background:
+    radial-gradient(ellipse 80% 60% at 70% -10%, oklch(0.70 0.15 290 / 0.06), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 0% 100%, oklch(0.72 0.13 235 / 0.04), transparent 55%);
+}
+
+/* Subtle SVG noise overlay — quiet, never above 0.02 opacity */
+.app::after {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+  opacity: 0.025;
+  mix-blend-mode: overlay;
+}
+[data-theme="light"] .app::after { opacity: 0.04; mix-blend-mode: multiply; }
+
+.sidebar, .main, .content { position: relative; z-index: 1; }
+
+/* Sidebar gets a soft inner glow at the brand */
+.sidebar-brand {
+  position: relative;
+}
+.sidebar-brand .mark {
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.18),
+    0 0 16px oklch(0.70 0.15 290 / 0.45);
+}
+
+/* ── Live indicators ─────────────────────────────────────── */
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  50%      { box-shadow: 0 0 0 4px color-mix(in oklab, currentColor 0%, transparent); opacity: 0.85; }
+}
+@keyframes ripple-out {
+  0%   { transform: scale(1);   opacity: 0.55; }
+  100% { transform: scale(2.6); opacity: 0;    }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0;  }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Pulsing dot — for "running" / "live" / "healthy now" */
+.live-dot {
+  position: relative;
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--success) 25%, transparent);
+  flex-shrink: 0;
+}
+.live-dot::after {
+  content: "";
+  position: absolute; inset: -2px;
+  border-radius: 50%;
+  background: var(--success);
+  opacity: 0.5;
+  animation: ripple-out 2s var(--ease-out) infinite;
+}
+.live-dot.warning { background: var(--warning); box-shadow: 0 0 0 2px color-mix(in oklab, var(--warning) 25%, transparent); }
+.live-dot.warning::after { background: var(--warning); }
+.live-dot.danger { background: var(--danger); box-shadow: 0 0 0 2px color-mix(in oklab, var(--danger) 25%, transparent); }
+.live-dot.danger::after { background: var(--danger); }
+.live-dot.accent { background: var(--accent-400); box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent-400) 25%, transparent); }
+.live-dot.accent::after { background: var(--accent-400); }
+
+/* Shimmer bar — used for "running" / streaming rows */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--accent-400) 18%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.4s linear infinite;
+}
+
+/* Running row — soft accent glow on the left edge */
+.row-running {
+  position: relative;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--accent-500) 8%, transparent) 0%,
+      transparent 35%
+    ) !important;
+}
+.row-running::before {
+  content: "";
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--accent-500);
+  box-shadow: 0 0 12px var(--accent-500);
+  animation: breathe 2.2s ease-in-out infinite;
+}
+
+/* ── Cards: hover elevation ──────────────────────────────── */
+.card {
+  transition: border-color var(--dur) var(--ease-out), background var(--dur-fast), transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+.card.interactive:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+/* Topbar surfaces */
+.topbar {
+  background:
+    linear-gradient(180deg, var(--bg-canvas) 0%, color-mix(in oklab, var(--bg-canvas) 92%, transparent) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 2;
+}
+
+/* System health pill (topbar) */
+.health-pill {
+  display: inline-flex; align-items: center;
+  gap: var(--space-2);
+  height: 26px;
+  padding: 0 var(--space-3) 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  font-size: var(--text-sm);
+  color: var(--fg-secondary);
+  cursor: pointer;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+.health-pill:hover { background: var(--bg-hover); border-color: var(--border); }
+.health-pill strong { color: var(--fg-primary); font-weight: var(--fw-medium); }
+.health-pill .sep { width: 1px; height: 12px; background: var(--border); }
+.health-pill .uptime { font-family: var(--font-mono); color: var(--fg-tertiary); font-size: 11px; }
+
+/* Env switcher */
+.env-switch {
+  display: inline-flex; align-items: center;
+  gap: 5px;
+  padding: 0 var(--space-2);
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  border: 1px solid oklch(0.70 0.15 290 / 0.30);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-300);
+  cursor: pointer;
+}
+[data-theme="light"] .env-switch { color: var(--accent-700); }
+.env-switch:hover { background: var(--accent-bg-strong); }
+
+/* ── Stat tiles: more depth ──────────────────────────────── */
+.stat {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--bg-base) 100%, transparent) 0%, var(--bg-base) 100%),
+    radial-gradient(circle at 100% 0%, color-mix(in oklab, var(--accent-500) 10%, transparent), transparent 50%);
+  transition: border-color var(--dur), transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+.stat:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.stat .meta-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: var(--text-xs); color: var(--fg-tertiary);
+  font-family: var(--font-mono);
+}
+.stat .meta-row .live-dot { width: 5px; height: 5px; box-shadow: 0 0 0 2px color-mix(in oklab, var(--success) 25%, transparent); }
+
+/* ── Sidebar nav: tighter active glow ───────────────────── */
+.nav-item[data-active="true"] {
+  background: linear-gradient(90deg, var(--bg-hover) 0%, color-mix(in oklab, var(--accent-500) 6%, var(--bg-hover)) 100%);
+}
+.nav-item[data-active="true"]::before {
+  box-shadow: 0 0 8px var(--accent-500);
+}
+
+/* ── Table refinements: row hover state with health column ─ */
+.table tbody tr {
+  transition: background var(--dur-fast);
+}
+.table .health-cell {
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── Section header (between page-head and content) ──────── */
+.section-strip {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-4);
+}
+.section-strip .item {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--fg-tertiary);
+}
+.section-strip .item strong {
+  color: var(--fg-primary);
+  font-family: var(--font-mono);
+  font-weight: var(--fw-medium);
+}
+.section-strip .item .live-dot { width: 6px; height: 6px; }
+.section-strip .divider-vert { height: 16px; }
+
+/* ── Provider card: hover lift + active glow ─────────────── */
+.provider-card {
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--dur), transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+}
+.provider-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.provider-card.live::before {
+  content: "";
+  position: absolute; inset: -1px -1px auto auto;
+  width: 60%; height: 60%;
+  background: radial-gradient(circle at 100% 0%, oklch(0.74 0.15 155 / 0.16), transparent 60%);
+  pointer-events: none;
+}
+.provider-card.beta::before {
+  background: radial-gradient(circle at 100% 0%, oklch(0.80 0.13 80 / 0.15), transparent 60%) !important;
+}
+
+/* Bar mini ─ tiny activity sparkline of bars */
+.mini-bars {
+  display: flex; align-items: flex-end; gap: 2px;
+  height: 20px;
+}
+.mini-bars .b {
+  width: 3px;
+  background: var(--accent-bg-strong);
+  border-radius: 1px;
+}
+.mini-bars .b.hot { background: var(--accent-500); }
+
+/* Endpoint card "fresh activity" glow */
+.endpoint-card.fresh {
+  border-color: oklch(0.74 0.15 155 / 0.35);
+  box-shadow: 0 0 0 1px oklch(0.74 0.15 155 / 0.2), 0 2px 0 oklch(0.74 0.15 155 / 0.08);
+}
+
+/* ── Button hover lifts subtly ───────────────────────────── */
+.btn-primary:hover {
+  box-shadow: 0 4px 14px oklch(0.70 0.15 290 / 0.30);
+}
+
+/* Focus ring is more visible */
+.btn:focus-visible,
+.input:focus-visible,
+.input-group:focus-within {
+  outline: none;
+}
+
+/* ── Code block subtle scanline ──────────────────────────── */
+.code {
+  position: relative;
+  background:
+    linear-gradient(180deg, var(--bg-surface), var(--bg-base));
+}
+
+/* ── Log row: subtle ts color when running ───────────────── */
+.log-row.running .msg::after {
+  content: "";
+  display: inline-block;
+  width: 7px; height: 13px;
+  margin-left: 4px;
+  background: var(--accent-400);
+  animation: breathe 1.2s ease-in-out infinite;
+  vertical-align: -2px;
+}
+
+/* ── Spinner ──────────────────────────────────────────────── */
+.spinner {
+  width: 13px; height: 13px;
+  border: 1.5px solid color-mix(in oklab, var(--accent-400) 35%, transparent);
+  border-top-color: var(--accent-400);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  display: inline-block;
+}
+
+/* ── Health column small bar (per-row latency) ───────────── */
+.latency-cell {
+  display: flex; align-items: center; gap: 8px;
+}
+.latency-cell .bar {
+  width: 36px; height: 4px;
+  background: var(--bg-active);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+.latency-cell .bar > i {
+  display: block; height: 100%;
+  border-radius: inherit;
+  background: var(--success);
+}
+.latency-cell .bar > i.warn { background: var(--warning); }
+.latency-cell .bar > i.bad  { background: var(--danger); }
+
+/* ── Provider mini stat row ───────────────────────────────── */
+.mini-stat {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.mini-stat .v {
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.mini-stat .l {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+  font-weight: var(--fw-medium);
+}
+
+/* Slightly stronger card head divider */
+.card-head { background: linear-gradient(180deg, color-mix(in oklab, var(--bg-base) 100%, transparent), var(--bg-base)); }
+
+/* ── Scroll-into-view focus polish on rows ───────────────── */
+.table tbody tr:focus-visible {
+  outline: 1px solid var(--accent-500);
+  outline-offset: -1px;
+}

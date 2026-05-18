@@ -30,6 +30,9 @@
               }
             ],
             "styles": [
+              "src/styles/tokens.css",
+              "src/styles/base.css",
+              "src/styles/refinement.css",
               "src/styles.scss"
             ]
           },

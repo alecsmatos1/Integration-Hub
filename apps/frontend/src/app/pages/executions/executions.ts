@@ -21,6 +21,16 @@ export class Executions implements OnInit {
   statusFilter = signal('');
   readonly statuses = STATUSES;
 
+  statusBadge(status: string): string {
+    const map: Record<string, string> = {
+      success: 'badge-success', failed: 'badge-danger',
+      running: 'badge-info', pending: 'badge-warning',
+      error: 'badge-danger', warn: 'badge-warning',
+      received: 'badge-success', processed: 'badge-success',
+    };
+    return map[status] ?? 'badge-neutral';
+  }
+
   ngOnInit() {
     this.load();
   }

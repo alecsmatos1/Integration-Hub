@@ -1,61 +1,70 @@
-<div class="page">
-  <h1>Executions</h1>
-  <p class="subtitle">History of all workflow runs</p>
-
-  <div class="filter-bar">
-    <label>
-      Status
-      <select (change)="onStatusChange($event)">
-        <option value="">All</option>
-        <option value="pending">Pending</option>
-        <option value="running">Running</option>
-        <option value="success">Success</option>
-        <option value="failed">Failed</option>
-      </select>
-    </label>
+<div class="page-head">
+  <div>
+    <h1>Executions</h1>
+    <p>History of all workflow runs</p>
   </div>
+</div>
 
-  <div class="card">
-    @if (error()) {
-      <div class="alert error">{{ error() }}</div>
-    } @else if (loading()) {
-      <div class="empty">Loading executions...</div>
-    } @else if (executions().length === 0) {
-      <div class="empty">No executions found. Run a workflow manually or trigger it via webhook.</div>
-    } @else {
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Workflow</th>
-              <th>Status</th>
-              <th>Duration</th>
-              <th>Retries</th>
-              <th>Started</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (ex of executions(); track ex.id) {
-              <tr>
-                <td>{{ ex.workflow?.name ?? (ex.workflowId | slice:0:8) }}</td>
-                <td><span class="badge" [class]="ex.status">{{ ex.status }}</span></td>
-                <td>{{ ex.durationMs != null ? ex.durationMs + 'ms' : '-' }}</td>
-                <td>{{ ex.retryCount > 0 ? ex.retryCount : '-' }}</td>
-                <td>{{ ex.createdAt | slice:0:19 }}</td>
-                <td class="actions-cell">
-                  <a class="btn-ghost" [routerLink]="['/executions', ex.id]">View logs</a>
+<div class="hstack" style="gap:var(--space-3);margin-bottom:var(--space-4)">
+  <div class="field" style="min-width:180px">
+    <label class="field-label">Status</label>
+    <select class="select" (change)="onStatusChange($event)">
+      <option value="">All</option>
+      <option value="pending">Pending</option>
+      <option value="running">Running</option>
+      <option value="success">Success</option>
+      <option value="failed">Failed</option>
+    </select>
+  </div>
+</div>
+
+<div class="card">
+  @if (error()) {
+    <div class="badge badge-danger" style="display:flex;padding:var(--space-3);height:auto;border-radius:var(--radius)">
+      {{ error() }}
+    </div>
+  } @else if (loading()) {
+    <div class="empty"><p>Loading executions...</p></div>
+  } @else if (executions().length === 0) {
+    <div class="empty">
+      <h4>No executions found</h4>
+      <p>Run a workflow manually or trigger it via webhook.</p>
+    </div>
+  } @else {
+    <div class="table-wrap" style="border:none;border-radius:0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Workflow</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Retries</th>
+            <th>Started</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ex of executions(); track ex.id) {
+            <tr [class.row-running]="ex.status === 'running'">
+              <td>{{ ex.workflow?.name ?? (ex.workflowId | slice:0:8) }}</td>
+              <td><span class="badge" [class]="statusBadge(ex.status)">{{ ex.status }}</span></td>
+              <td class="num">{{ ex.durationMs != null ? ex.durationMs + 'ms' : '-' }}</td>
+              <td>{{ ex.retryCount > 0 ? ex.retryCount : '-' }}</td>
+              <td class="muted">{{ ex.createdAt | slice:0:19 }}</td>
+              <td>
+                <div class="hstack" style="gap:var(--space-2)">
+                  <a class="btn btn-ghost btn-sm" [routerLink]="['/executions', ex.id]">View logs</a>
                   @if (ex.status === 'failed') {
-                    <button class="btn-ghost" [disabled]="retryingId() === ex.id" (click)="retry(ex.id)">
+                    <button class="btn btn-ghost btn-sm" [disabled]="retryingId() === ex.id" (click)="retry(ex.id)">
                       {{ retryingId() === ex.id ? 'Retrying...' : 'Retry' }}
                     </button>
                   }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
-  </div>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 </div>

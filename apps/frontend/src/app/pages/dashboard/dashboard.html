@@ -1,38 +1,49 @@
-<div class="page">
-  <h1>Welcome, {{ auth.user()?.name || auth.user()?.email }}</h1>
-  <p class="subtitle">Your integration hub overview</p>
-
-  @if (loadState() === 'error') {
-    <div class="alert error" style="margin-bottom:1rem">Could not refresh stats - showing cached values.</div>
-  }
-
-  <div class="stats-grid">
-    <a class="stat-card" routerLink="/integrations">
-      <div class="stat-value">{{ stats().connections }}</div>
-      <div class="stat-label">Connections</div>
-    </a>
-    <a class="stat-card" routerLink="/webhook-endpoints">
-      <div class="stat-value">{{ stats().endpoints }}</div>
-      <div class="stat-label">Endpoints</div>
-    </a>
-    <a class="stat-card" routerLink="/webhook-events">
-      <div class="stat-value">{{ stats().events }}</div>
-      <div class="stat-label">Events received</div>
-    </a>
-    <a class="stat-card" routerLink="/workflows">
-      <div class="stat-value">{{ stats().workflows }}</div>
-      <div class="stat-label">Workflows</div>
-    </a>
-    <a class="stat-card" routerLink="/executions">
-      <div class="stat-value">{{ stats().executions }}</div>
-      <div class="stat-label">Executions</div>
-    </a>
+<div class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Welcome, {{ auth.user()?.name || auth.user()?.email }}</p>
   </div>
+  <div class="actions">
+    <button class="btn btn-secondary" (click)="ngOnInit()">Refresh</button>
+    <a class="btn btn-primary" routerLink="/webhook-endpoints">New endpoint</a>
+  </div>
+</div>
 
-  <div class="quick-links">
-    <h2>Quick actions</h2>
-    <a class="btn" routerLink="/integrations">+ Add connection</a>
-    <a class="btn" routerLink="/webhook-endpoints">+ Create endpoint</a>
-    <a class="btn" routerLink="/workflows">+ Create workflow</a>
+@if (loadState() === 'error') {
+  <div class="badge badge-danger" style="display:flex;padding:var(--space-3);height:auto;border-radius:var(--radius);margin-bottom:var(--space-6)">
+    Could not refresh stats — showing cached values.
+  </div>
+}
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);margin-bottom:var(--space-6)">
+  <a class="stat" routerLink="/integrations" style="text-decoration:none">
+    <div class="label"><span>Connections</span></div>
+    <span class="value">{{ stats().connections }}</span>
+  </a>
+  <a class="stat" routerLink="/webhook-endpoints" style="text-decoration:none">
+    <div class="label"><span>Endpoints</span></div>
+    <span class="value">{{ stats().endpoints }}</span>
+  </a>
+  <a class="stat" routerLink="/webhook-events" style="text-decoration:none">
+    <div class="label"><span>Events · 24h</span></div>
+    <span class="value">{{ stats().events }}</span>
+  </a>
+  <a class="stat" routerLink="/workflows" style="text-decoration:none">
+    <div class="label"><span>Workflows</span></div>
+    <span class="value">{{ stats().workflows }}</span>
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h3>Quick actions</h3>
+  </div>
+  <div class="card-body">
+    <div class="hstack" style="gap:var(--space-2)">
+      <a class="btn btn-secondary" routerLink="/integrations">Add connection</a>
+      <a class="btn btn-secondary" routerLink="/webhook-endpoints">Create endpoint</a>
+      <a class="btn btn-secondary" routerLink="/workflows">Create workflow</a>
+      <a class="btn btn-primary" routerLink="/executions">View executions</a>
+    </div>
   </div>
 </div>

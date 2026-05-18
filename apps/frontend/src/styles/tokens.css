@@ -1,0 +1,153 @@
+/* =============================================================
+   Integration Hub — Design Tokens
+   Copy this block (or its SCSS equivalent) into styles.scss
+   ============================================================= */
+
+:root {
+  /* ── Type scale ─────────────────────────────────────────── */
+  --font-sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --text-xs: 11px;     --lh-xs: 16px;
+  --text-sm: 12px;     --lh-sm: 18px;
+  --text-base: 13px;   --lh-base: 20px;
+  --text-md: 14px;     --lh-md: 22px;
+  --text-lg: 16px;     --lh-lg: 24px;
+  --text-xl: 20px;     --lh-xl: 28px;
+  --text-2xl: 26px;    --lh-2xl: 32px;
+  --text-3xl: 34px;    --lh-3xl: 40px;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  --tracking-tight: -0.01em;
+  --tracking-tighter: -0.02em;
+
+  /* ── Spacing scale (4px base) ───────────────────────────── */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+  --space-11: 80px;
+  --space-12: 96px;
+
+  /* ── Radii ──────────────────────────────────────────────── */
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-full: 999px;
+
+  /* ── Motion ─────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 280ms;
+
+  /* ── Brand accent — violet (shared across themes) ───────── */
+  --accent-300: oklch(0.82 0.10 290);
+  --accent-400: oklch(0.76 0.13 290);
+  --accent-500: oklch(0.70 0.15 290);   /* primary */
+  --accent-600: oklch(0.62 0.16 290);
+  --accent-700: oklch(0.52 0.16 290);
+  --accent-bg: oklch(0.70 0.15 290 / 0.12);
+  --accent-bg-strong: oklch(0.70 0.15 290 / 0.22);
+  --accent-ring: oklch(0.70 0.15 290 / 0.45);
+
+  /* ── Status colors (shared) ─────────────────────────────── */
+  --success: oklch(0.74 0.15 155);
+  --success-bg: oklch(0.74 0.15 155 / 0.13);
+  --warning: oklch(0.80 0.13 80);
+  --warning-bg: oklch(0.80 0.13 80 / 0.15);
+  --danger: oklch(0.68 0.20 25);
+  --danger-bg: oklch(0.68 0.20 25 / 0.13);
+  --info: oklch(0.72 0.13 235);
+  --info-bg: oklch(0.72 0.13 235 / 0.13);
+}
+
+/* ── Dark theme (default) ─────────────────────────────────── */
+:root, [data-theme="dark"] {
+  --bg-canvas: oklch(0.155 0.005 280);
+  --bg-base:   oklch(0.180 0.005 280);
+  --bg-surface: oklch(0.205 0.005 280);
+  --bg-elevated: oklch(0.235 0.006 280);
+  --bg-input: oklch(0.195 0.005 280);
+  --bg-hover: oklch(0.245 0.006 280);
+  --bg-active: oklch(0.275 0.007 280);
+
+  --border-subtle: oklch(0.28 0.005 280);
+  --border: oklch(0.33 0.006 280);
+  --border-strong: oklch(0.42 0.007 280);
+  --border-focus: var(--accent-500);
+
+  --fg-primary: oklch(0.98 0 0);
+  --fg-secondary: oklch(0.74 0.005 280);
+  --fg-tertiary: oklch(0.56 0.005 280);
+  --fg-muted: oklch(0.44 0.005 280);
+  --fg-inverse: oklch(0.18 0 0);
+
+  --shadow-xs: 0 1px 0 rgba(0,0,0,0.4);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.02);
+  --shadow:   0 4px 12px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.025);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-pop: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+
+  --grid-line: oklch(0.22 0.005 280);
+  --scrollbar-thumb: oklch(0.32 0.005 280);
+  --scrollbar-thumb-hover: oklch(0.42 0.005 280);
+
+  color-scheme: dark;
+}
+
+/* ── Light theme ──────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-canvas: oklch(0.985 0.002 280);
+  --bg-base:   oklch(1.000 0 0);
+  --bg-surface: oklch(0.985 0.003 280);
+  --bg-elevated: oklch(1.000 0 0);
+  --bg-input: oklch(1.000 0 0);
+  --bg-hover: oklch(0.965 0.004 280);
+  --bg-active: oklch(0.940 0.005 280);
+
+  --border-subtle: oklch(0.94 0.004 280);
+  --border: oklch(0.89 0.005 280);
+  --border-strong: oklch(0.80 0.006 280);
+  --border-focus: var(--accent-600);
+
+  --fg-primary: oklch(0.18 0.005 280);
+  --fg-secondary: oklch(0.38 0.005 280);
+  --fg-tertiary: oklch(0.52 0.005 280);
+  --fg-muted: oklch(0.66 0.005 280);
+  --fg-inverse: oklch(0.98 0 0);
+
+  --shadow-xs: 0 1px 0 rgba(15, 17, 22, 0.04);
+  --shadow-sm: 0 1px 2px rgba(15, 17, 22, 0.06), 0 0 0 1px rgba(15, 17, 22, 0.04);
+  --shadow:   0 6px 16px rgba(15, 17, 22, 0.08), 0 0 0 1px rgba(15, 17, 22, 0.04);
+  --shadow-lg: 0 18px 40px rgba(15, 17, 22, 0.12), 0 0 0 1px rgba(15, 17, 22, 0.05);
+  --shadow-pop: 0 24px 60px rgba(15, 17, 22, 0.18), 0 0 0 1px rgba(15, 17, 22, 0.06);
+
+  --grid-line: oklch(0.93 0.004 280);
+  --scrollbar-thumb: oklch(0.85 0.005 280);
+  --scrollbar-thumb-hover: oklch(0.72 0.005 280);
+
+  /* Slightly stronger status tints on light surfaces */
+  --accent-bg: oklch(0.70 0.15 290 / 0.10);
+  --accent-bg-strong: oklch(0.70 0.15 290 / 0.16);
+  --success-bg: oklch(0.74 0.15 155 / 0.12);
+  --warning-bg: oklch(0.80 0.13 80 / 0.18);
+  --danger-bg: oklch(0.68 0.20 25 / 0.10);
+  --info-bg: oklch(0.72 0.13 235 / 0.12);
+
+  color-scheme: light;
+}

@@ -1,30 +1,45 @@
-<div class="page">
-  <div class="action-bar">
-    <div>
-      <h1>Execution logs</h1>
-      <p class="subtitle"><code>{{ executionId() }}</code></p>
-    </div>
-    <a class="btn-primary" routerLink="/executions">Back to executions</a>
-  </div>
+<div class="hstack" style="gap:var(--space-2);margin-bottom:var(--space-5)">
+  <a class="btn btn-ghost btn-sm" routerLink="/executions">← Executions</a>
+  <span class="meta">/</span>
+  <span class="mono" style="font-size:var(--text-sm)">{{ executionId() }}</span>
+</div>
 
-  <div class="card">
-    @if (loading()) {
-      <div class="empty">Loading logs...</div>
-    } @else if (logs().length === 0) {
-      <div class="empty">No logs found for this execution.</div>
-    } @else {
-      <div class="log-list">
-        @for (log of logs(); track log.id) {
-          <div class="log-entry" [class]="log.level">
-            <span class="log-level badge" [class]="log.level">{{ log.level }}</span>
-            <span class="log-msg">{{ log.message }}</span>
-            @if (log.metadata) {
-              <pre class="log-meta">{{ log.metadata | json }}</pre>
-            }
-            <span class="log-time">{{ log.createdAt | slice:0:19 }}</span>
+<div class="page-head">
+  <div>
+    <h1>Execution logs</h1>
+  </div>
+  <div class="actions">
+    <a class="btn btn-secondary" routerLink="/executions">Back</a>
+  </div>
+</div>
+
+<div class="card">
+  @if (loading()) {
+    <div class="empty"><p>Loading logs...</p></div>
+  } @else if (logs().length === 0) {
+    <div class="empty">
+      <h4>No logs found</h4>
+      <p>No logs were recorded for this execution.</p>
+    </div>
+  } @else {
+    <div class="log-viewer">
+      @for (log of logs(); track log.id; let i = $index) {
+        <div class="log-row" [class]="logRowClass(log.level)">
+          <span class="ln">{{ (i + 1).toString().padStart(2, '0') }}</span>
+          <span class="ts">{{ log.createdAt | slice:0:19 }}</span>
+          <span class="msg">
+            <span class="badge" [class]="logBadgeClass(log.level)" style="margin-right:var(--space-2)">{{ log.level }}</span>
+            {{ log.message }}
+          </span>
+        </div>
+        @if (log.metadata) {
+          <div class="log-row">
+            <span class="ln"></span>
+            <span class="ts"></span>
+            <pre class="code" style="margin:0;font-size:var(--text-xs)">{{ log.metadata | json }}</pre>
           </div>
         }
-      </div>
-    }
-  </div>
+      }
+    </div>
+  }
 </div>

@@ -1,74 +1,90 @@
-<div class="page">
-  <div class="action-bar">
-    <div>
-      <h1>Integrations</h1>
-      <p class="subtitle">Manage your provider connections</p>
-    </div>
-    <button class="btn-primary" (click)="showForm.set(!showForm())">
-      {{ showForm() ? 'Cancel' : '+ Add connection' }}
+<div class="page-head">
+  <div>
+    <h1>Integrations</h1>
+    <p>Manage your provider connections</p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-secondary" (click)="showForm.set(!showForm())">
+      {{ showForm() ? 'Cancel' : 'Add connection' }}
     </button>
   </div>
+</div>
 
-  @if (showForm()) {
-    <div class="form-section">
-      <h2>New connection</h2>
-      @if (error()) { <div class="alert error">{{ error() }}</div> }
-      <form (ngSubmit)="submit()">
-        <div class="form-row">
-          <label>
-            Provider
-            <select [(ngModel)]="form.provider" name="provider">
+@if (showForm()) {
+  <div class="card" style="margin-bottom:var(--space-4)">
+    <div class="card-head">
+      <h3>New connection</h3>
+    </div>
+    <div class="card-body">
+      @if (error()) {
+        <div class="badge badge-danger" style="display:flex;padding:var(--space-3);height:auto;border-radius:var(--radius);margin-bottom:var(--space-4)">
+          {{ error() }}
+        </div>
+      }
+      <form (ngSubmit)="submit()" class="vstack" style="gap:var(--space-4)">
+        <div class="hstack" style="gap:var(--space-3)">
+          <div class="field" style="flex:1">
+            <label class="field-label">Provider</label>
+            <select class="select" [(ngModel)]="form.provider" name="provider">
               @for (p of providers(); track p.id) {
                 <option [value]="p.name">{{ p.displayName }}</option>
               }
             </select>
-          </label>
-          <label>
-            Name
-            <input type="text" [(ngModel)]="form.name" name="name" required placeholder="My GitHub" />
-          </label>
+          </div>
+          <div class="field" style="flex:1">
+            <label class="field-label">Name</label>
+            <input class="input" type="text" [(ngModel)]="form.name" name="name" required placeholder="My GitHub" />
+          </div>
         </div>
-        <label>
-          Webhook secret (optional)
-          <input type="password" [(ngModel)]="form.secret" name="secret" placeholder="Leave blank if no HMAC verification" />
-        </label>
-        <button type="submit" class="btn-primary" [disabled]="loading()">
-          {{ loading() ? 'Creating...' : 'Create connection' }}
-        </button>
+        <div class="field">
+          <label class="field-label">Webhook secret (optional)</label>
+          <input class="input" type="password" [(ngModel)]="form.secret" name="secret" placeholder="Leave blank if no HMAC verification" />
+        </div>
+        <div>
+          <button type="submit" class="btn btn-primary" [disabled]="loading()">
+            @if (loading()) { <span class="spinner"></span> }
+            {{ loading() ? 'Creating...' : 'Create connection' }}
+          </button>
+        </div>
       </form>
     </div>
-  }
-
-  @if (success()) {
-    <div class="alert success" style="margin-top:1rem">{{ success() }}</div>
-  }
-
-  <div class="card" style="margin-top:1.5rem">
-    @if (connections().length === 0) {
-      <div class="empty">No connections yet. Add one above.</div>
-    } @else {
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Provider</th>
-              <th>Status</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (conn of connections(); track conn.id) {
-              <tr>
-                <td>{{ conn.name }}</td>
-                <td>{{ conn.provider?.displayName ?? conn.providerId }}</td>
-                <td><span class="badge" [class]="conn.isActive ? 'success' : 'failed'">{{ conn.isActive ? 'Active' : 'Inactive' }}</span></td>
-                <td>{{ conn.createdAt | slice:0:10 }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
   </div>
+}
+
+@if (success()) {
+  <div class="badge badge-success" style="display:flex;padding:var(--space-3);height:auto;border-radius:var(--radius);margin-bottom:var(--space-4)">
+    {{ success() }}
+  </div>
+}
+
+<div class="card">
+  @if (connections().length === 0) {
+    <div class="empty">
+      <h4>No connections yet</h4>
+      <p>Add a connection to start receiving webhooks.</p>
+    </div>
+  } @else {
+    <div class="table-wrap" style="border:none;border-radius:0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Provider</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (conn of connections(); track conn.id) {
+            <tr>
+              <td>{{ conn.name }}</td>
+              <td>{{ conn.provider?.displayName ?? conn.providerId }}</td>
+              <td><span class="badge" [class]="conn.isActive ? 'badge-success' : 'badge-neutral'">{{ conn.isActive ? 'Active' : 'Inactive' }}</span></td>
+              <td class="muted">{{ conn.createdAt | slice:0:10 }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 </div>

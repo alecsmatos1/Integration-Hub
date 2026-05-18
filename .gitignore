@@ -32,6 +32,8 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
+design-bundle/
+
 # Local assistant/tooling state
 .claude/
 

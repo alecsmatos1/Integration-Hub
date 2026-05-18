@@ -17,6 +17,21 @@ export class ExecutionDetail implements OnInit {
   logs = signal<ExecutionLog[]>([]);
   loading = signal(true);
 
+  logRowClass(level: string): string {
+    const map: Record<string, string> = {
+      error: 'error', warn: 'warn', success: 'success', info: 'info',
+    };
+    return map[level] ?? 'info';
+  }
+
+  logBadgeClass(level: string): string {
+    const map: Record<string, string> = {
+      error: 'badge-danger', warn: 'badge-warning',
+      success: 'badge-success', info: 'badge-neutral',
+    };
+    return map[level] ?? 'badge-neutral';
+  }
+
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id') ?? '';
     this.executionId.set(id);
