@@ -20,7 +20,7 @@ Built as a portfolio project demonstrating NestJS, Angular, Prisma, JWT auth, HM
 | Multi-user isolation | All queries scoped by `userId`; cross-user access returns 404 |
 | API security | CORS, rate limiting via `@nestjs/throttler`, secret stripping from responses |
 | Frontend | Angular 21 standalone components, signals, lazy routes, HTTP interceptors |
-| Testing | Jest e2e (43 tests), unit tests (23), Vitest frontend (8) |
+| Testing | Jest e2e (43 tests), unit tests (27), Vitest frontend (16) |
 | CI/CD | GitHub Actions with PostgreSQL service container |
 
 ---
@@ -200,6 +200,10 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 ## Screenshots
 
+**Login** — JWT-based authentication with access and refresh tokens.
+
+![Login](docs/assets/login.png)
+
 **Dashboard** — overview with live counts of connections, endpoints, events, and executions.
 
 ![Dashboard](docs/assets/dashboard.png)
@@ -257,10 +261,8 @@ cd apps/frontend && npm test -- --watch=false
 - Angular dashboard with signals and lazy routes
 - CI pipeline with PostgreSQL service container
 - Public deployment on Railway + Vercel
-
-**Next**
-- Production smoke test against the public URLs
 - Frontend API URL driven by deploy-time environment variable
+- Smoke tested end-to-end on public URLs
 
 **Later**
 - Slack / Discord providers
